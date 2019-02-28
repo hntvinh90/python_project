@@ -1,0 +1,241 @@
+#!/usr/bin/python
+
+from Tkinter import Tk,PhotoImage,Button,StringVar,Label
+from pyautogui import locateCenterOnScreen,moveRel,moveTo,click,hotkey,scroll,position,FAILSAFE,typewrite
+from time import sleep,time
+from threading import Thread
+
+onoff=0
+FAILSAFE=False
+status=0
+
+class change_status(Thread):
+	def __init__(self,text):
+		Thread.__init__(self)
+		self.text=text
+	def run(self):
+		global status,root
+		status.set(self.text)
+		root.update()
+
+def main():
+	global status,root
+	root=Tk()
+	root.title('ClickNEOBUX')
+	try:
+		root.call('wm','iconphoto',root._w,PhotoImage(file='neobux.png'))
+	except Exception:
+		print 'Error loading icon'
+	w=root.winfo_screenwidth()-180
+	h=root.winfo_screenheight()-50
+	root.geometry('180x80+'+str(w)+'+'+str(h))
+	#root.overrideredirect(True)
+	root.resizable(False,False)
+	root.protocol('WM_DELETE_WINDOW',lambda: exit(root))
+	
+	text=StringVar()
+	text.set('Start')
+	Button(root,textvariable=text,command=lambda: click_button(root,text)).place(x=50,y=10,height=30,width=80)
+	
+	status=StringVar()
+	change_status('Pause').start()
+	Label(root,textvariable=status).place(x=0,y=50,width=180,height=30)
+	#Button(root,text='Exit',command=lambda: exit(root)).place(x=180,y=50,height=30,width=80)
+	
+	root.mainloop()
+
+def exit(root):
+	root.destroy()
+
+def click_button(root,text):
+	global onoff
+	if onoff==0:
+		text.set('Pause')
+		onoff=1
+		root.after(1,lambda: run(root))
+		change_status('Running ...').start()
+	elif onoff==1:
+		text.set('Start')
+		onoff=0
+		change_status('Pause').start()
+
+def run(root):
+	if onoff==1:
+		check_ad().start()
+	root.after(10000,lambda: run(root))
+
+def click_ad():
+	sleep(3)
+	pos=locateCenterOnScreen('refresh.png')
+	if pos!=None:
+		moveTo(pos[0],pos[1]+100)
+		pos0=position()
+		scroll(100,pos0[0],pos0[1])
+		sleep(1)
+		pos=locateCenterOnScreen('name.png')
+		if pos==None: 
+			change_status('Website not run').start()
+			return
+		pos=locateCenterOnScreen('view.png')
+		while pos==None:
+			change_status('Find View Advertisements').start()
+			pos=locateCenterOnScreen('view.png')
+			sleep(0.5)
+		click(pos[0],pos[1])
+		pos=locateCenterOnScreen('config_refresh.png')
+		while pos==None:
+			change_status('Wait refresh').start()
+			pos=locateCenterOnScreen('config_refresh.png')
+			sleep(0.5)
+		sleep(1)
+		num=0
+		moveTo(pos0[0],pos0[1])
+		
+		while True:
+			pos=locateCenterOnScreen('star.png')
+			if pos!=None:
+				click(pos[0],pos[1])
+				sleep(0.5)
+				pos=locateCenterOnScreen('dot.png')
+				while pos==None:
+					change_status('Not found dot').start()
+					pos=locateCenterOnScreen('dot.png')
+					sleep(0.5)
+				click(pos[0],pos[1])
+				moveTo(pos0[0],pos0[1])
+				ct=time()
+				while True:
+					sleep(0.5)
+					pos=locateCenterOnScreen('close.png')
+					if pos!=None:
+						click(pos[0],pos[1])
+						hotkey('enter')
+						moveTo(pos0[0],pos0[1])
+						sleep(3)
+						break
+					else: 
+						change_status('Not found close '+str(time()-ct)).start()
+						pos=locateCenterOnScreen('expired.png')
+						if pos!=None:
+							change_status('Expired').start()
+							hotkey('ctrl','w')
+							hotkey('enter')
+							moveTo(pos0[0],pos0[1])
+							sleep(1)
+							break
+					if time()-ct>180: 
+						hotkey('ctrl','w')
+						hotkey('enter')
+						change_status('Error when watch Ad').start()
+						sleep(1)
+						break
+			else: 
+				change_status('Not found star').start()
+				if num<4:
+					num+=1
+					scroll(-5,pos0[0],pos0[1])
+					sleep(1)
+				else: break
+			
+		moveTo(pos0[0],pos0[1])
+		while True:
+			pos=locateCenterOnScreen('adprize.png')
+			if pos!=None:
+				click(pos[0],pos[1]+40)
+				moveTo(pos0[0],pos0[1])
+				ct=time()
+				while True:
+					sleep(0.5)
+					pos=locateCenterOnScreen('ok.png')
+					if pos!=None:
+						pos=locateCenterOnScreen('next.png')
+						if pos!=None:
+							click(pos[0],pos[1])
+							hotkey('enter')
+							moveTo(pos0[0],pos0[1])
+						else:
+							pos=locateCenterOnScreen('close.png')
+							if pos!=None:
+								click(pos[0],pos[1])
+								hotkey('enter')
+								moveTo(pos0[0],pos0[1])
+								sleep(1)
+								break
+							else: change_status('Not found close').start()
+					else: 
+						change_status('Not found ok '+str(time()-ct)).start()
+						pos=locateCenterOnScreen('expired.png')
+						if pos!=None:
+							change_status('Expired').start()
+							hotkey('ctrl','w')
+							hotkey('enter')
+							moveTo(pos0[0],pos0[1])
+							sleep(1)
+							break
+					if time()-ct>180: 
+						hotkey('ctrl','w')
+						hotkey('enter')
+						change_status('Error when watch Ad (Prize)').start()
+						sleep(1)
+						break
+			else:
+				change_status('Not found adprize').start()
+				if num>0:
+					num-=1
+					scroll(5,pos0[0],pos0[1])
+					sleep(1)
+				else: break
+	else: change_status('Not found refresh').start()
+
+class check_ad(Thread):
+	def __init__(self):
+		Thread.__init__(self)
+	def run(self):
+		global onoff
+		onoff=-1
+		pos=locateCenterOnScreen('signal.png')
+		if pos==None:
+			check_login()
+		else: change_status('Have no Ad').start()
+		onoff=1
+
+def check_login():
+	change_status('Check login').start()
+	pos=locateCenterOnScreen('notlogin.png')
+	if pos==None:
+		click_ad()
+	else:
+		click(pos[0],pos[1])
+		sleep(1)
+		login()
+
+def login():
+	pos=locateCenterOnScreen('login.png')
+	if pos==None: change_status('Error check login').start()
+	else:
+		click(pos[0],pos[1])
+		pos=locateCenterOnScreen('send.png')
+		while pos==None:
+			change_status('Wait login').start()
+			pos=locateCenterOnScreen('send.png')
+			sleep(0.5)
+		click(pos[0],pos[1])
+		sleep(0.5)
+		typewrite('hntvinh1990')
+		hotkey('tab')
+		typewrite('tinhhuynh')
+		hotkey('enter')
+		pos=locateCenterOnScreen('name.png')
+		while pos==None:
+			change_status('Logining ...').start()
+			pos=locateCenterOnScreen('name.png')
+			sleep(0.5)
+		pos=locateCenterOnScreen('view.png')
+		while pos==None:
+			change_status('Find View Advertisements').start()
+			pos=locateCenterOnScreen('view.png')
+			sleep(0.5)
+		click(pos[0],pos[1])
+		sleep(30)
+	
+main()

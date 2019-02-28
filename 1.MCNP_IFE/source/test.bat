@@ -1,0 +1,1 @@
+python MCNP_IFE.py %1

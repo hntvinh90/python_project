@@ -1,0 +1,13 @@
+ mcnp     ver=5    , ld=11112005  02/08/18 09:34:42                   
+          Thread Name & Version = mcnp5VE_RSICC, 1.40
+          Copyright LANL/UC/DOE - see output file
+                                _                                      
+          ._ _    _  ._   ._   |_                                      
+          | | |  (_  | |  |_)   _)                                     
+                          |                                            
+  
+ comment. using random number generator  1, initial seed = 19073486328125      
+ imcn   is done
+
+ no plot because it would have been empty.
+ no plot because it would have been empty.

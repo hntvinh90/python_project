@@ -1,0 +1,21 @@
+#!/bin/sh
+
+printf $#
+
+if -n "$1"; then
+	
+	filename=$1
+	filename_no=${filename%".py"}
+	pyinstaller ./$filename
+	cp -r ./dist/$filename_no ./
+	rm ./$filename_no.spec
+	rm -r ./dist ./build
+	mv ./$filename_no ./bin
+	
+else
+
+	printf "Must type file name ...\n"
+
+fi
+
+exit 0
